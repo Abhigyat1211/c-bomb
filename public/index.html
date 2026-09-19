@@ -264,7 +264,6 @@ const Snd = (() => {
 
 /* =========================================================
    QUESTION BANK — 15 sets × 3 questions = 45 official Qs
-   Each set: Q1 easy → Q2 medium → Q3 medium-hard
    ========================================================= */
 const ROOM_QUESTIONS = {
   1: [
@@ -346,7 +345,6 @@ const ROOM_QUESTIONS = {
 
 /* =========================================================
    PENALTY BANK — 30 easy-medium questions
-   Simple arithmetic, single loops, basic arrays, basic bit ops
    ========================================================= */
 const PENALTIES = [
   {id:'P01',code:`int x = 10;\nint r = x / 3 + x % 3;\n// r = ?`,answer:4},
@@ -1251,6 +1249,7 @@ function App(){
 
   const socketRef = useRef(null);
   const startedAtRef = useRef(null);
+  const slotRef = useRef(null);
   const timeRef = useRef(GAME_DURATION);
   const rafRef = useRef(null);
   const lastFrameRef = useRef(performance.now());
@@ -1261,6 +1260,7 @@ function App(){
 
   useEffect(()=>{ timeRef.current = timeRemaining; },[timeRemaining]);
   useEffect(()=>{ freezeRef.current = {isFrozen, endsAt:freezeEndsAt, fromQ3:freezeFromQ3}; },[isFrozen,freezeEndsAt,freezeFromQ3]);
+  useEffect(()=>{ slotRef.current = slot; },[slot]);
 
   useEffect(()=>{
     const socket = io();
@@ -1289,7 +1289,8 @@ function App(){
       setLastOppCut(questionIndex);
     });
     socket.on('matchOver', ({winner, finalTime, reason}) => {
-      const iWon = (winner === slot);
+      const mySlot = slotRef.current;
+      const iWon = (winner === mySlot);
       setFinalTime(finalTime || 0);
       setOutcome(iWon ? 'won' : (winner === 'none' ? 'timeout' : 'lost'));
       setPhase('outcome');
@@ -1304,7 +1305,6 @@ function App(){
 
   useEffect(()=>{
     if(phase === 'countdown' && room){
-      // hash room code → 1..15
       const seed = room.split('').reduce((a,c)=>a+c.charCodeAt(0), 0) % 15 + 1;
       const qs = ROOM_QUESTIONS[seed];
       setOfficialIndex(0);
